@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" data-theme="sunflower">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fff7dc">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Dani Days">
+<link rel="apple-touch-icon" href="./icon-180.png?v=3">
+<link rel="icon" type="image/png" href="./icon-180.png?v=3">
+<title>Dani Days</title>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./style.css?v=18">
+<script>window.__API_BASE__ = 'https://aznzdqbnsmcbmmhcvpfy.supabase.co/functions/v1/dani-days-test';</script>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">DANI<span>DAYS</span></div>
+    <div class="sync" id="sync" aria-live="polite">Loading…</div>
+  </header>
+
+  <main id="view" tabindex="-1"></main>
+
+  <nav class="tabs" aria-label="Main">
+    <button data-tab="today" class="active"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3.5"/></svg>Today</button>
+    <button data-tab="progress"><svg viewBox="0 0 24 24"><path d="M4 19h16M6 15l4-4 3 3 5-6"/></svg>Progress</button>
+    <button data-tab="history"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>History</button>
+    <button data-tab="settings"><svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h14"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="17" r="2"/></svg>Rules</button>
+  </nav>
+</div>
+
+<div class="toast-wrap" id="toasts" aria-live="polite"></div>
+<div class="modal" id="modal" hidden><div class="modal-card" role="dialog" aria-modal="true"><p id="modal-text"></p><div class="modal-actions"><button class="btn ghost" id="modal-no">Cancel</button><button class="btn danger" id="modal-yes">Confirm</button></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="./app.js?v=18"></script>
+</body>
+</html>
