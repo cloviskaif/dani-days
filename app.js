@@ -87,21 +87,23 @@
   ];
   function waterOK(d) { return !!d && (d.events.some(e => e.type === 'water') || (d.water || 0) >= state.settings.waterTarget); }
   const WC = [
-    { k: 'pushups', name: 'push-ups', min: 50, max: 150, step: 10, unit: 'reps', inc: [10, 25] },
-    { k: 'squats', name: 'squats', min: 100, max: 200, step: 10, unit: 'reps', inc: [10, 25] },
-    { k: 'situps', name: 'sit-ups', min: 50, max: 150, step: 10, unit: 'reps', inc: [10, 25] },
-    { k: 'burpees', name: 'burpees', min: 30, max: 80, step: 5, unit: 'reps', inc: [5, 10] },
-    { k: 'lunges', name: 'lunges', min: 50, max: 100, step: 10, unit: 'reps', inc: [10, 25] },
-    { k: 'jacks', name: 'jumping jacks', min: 100, max: 300, step: 25, unit: 'reps', inc: [25, 50] },
-    { k: 'plank', name: 'plank', min: 2, max: 5, step: 1, unit: 'min', inc: [0.5, 1] },
+    { k: 'pushups', home: true, name: 'push-ups', min: 50, max: 150, step: 10, unit: 'reps', inc: [10, 25] },
+    { k: 'squats', home: true, name: 'squats', min: 100, max: 200, step: 10, unit: 'reps', inc: [10, 25] },
+    { k: 'situps', home: true, name: 'sit-ups', min: 50, max: 150, step: 10, unit: 'reps', inc: [10, 25] },
+    { k: 'burpees', home: true, name: 'burpees', min: 30, max: 80, step: 5, unit: 'reps', inc: [5, 10] },
+    { k: 'lunges', home: true, name: 'lunges', min: 50, max: 100, step: 10, unit: 'reps', inc: [10, 25] },
+    { k: 'jacks', home: true, name: 'jumping jacks', min: 100, max: 300, step: 25, unit: 'reps', inc: [25, 50] },
+    { k: 'plank', home: true, name: 'plank', min: 2, max: 5, step: 1, unit: 'min', inc: [0.5, 1] },
     { k: 'run', name: 'run', min: 2, max: 5, step: 0.5, unit: 'km', inc: [0.5, 1] },
     { k: 'boxing', name: 'boxing', min: 20, max: 45, step: 5, unit: 'min', inc: [1, 5] }
   ];
+  const WC_HOME_FROM = '2026-11-06';
   function wcFor(ds) {
     let h = 2166136261; for (const c of 'w' + ds) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
     let a = h >>> 0;
     const rnd = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-    const c = WC[Math.floor(rnd() * WC.length)], n = Math.round((c.max - c.min) / c.step);
+    const pool = ds >= WC_HOME_FROM ? WC.filter(x => x.home) : WC; // at-home only from 6 Nov 2026; earlier days keep their pick
+    const c = pool[Math.floor(rnd() * pool.length)], n = Math.round((c.max - c.min) / c.step);
     const target = +(c.min + c.step * Math.floor(rnd() * (n + 1))).toFixed(1);
     const pts = Math.round(15 + 20 * (target - c.min) / (c.max - c.min));
     const label = c.unit === 'reps' ? target + ' ' + c.name : c.k === 'run' ? 'Run ' + target + ' km' : c.k === 'plank' ? target + ' min plank' : target + ' min boxing';
