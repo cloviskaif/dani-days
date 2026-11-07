@@ -604,15 +604,31 @@
       const tgt = k === 'protein' ? s.proteinTarget : s.waterTarget, hit = cur < tgt && cur + v >= tgt;
       const diff = commit(() => { day(ds)[k] = cur + v; }, true);
       const left = Math.max(0, tgt - cur - v);
-      react(diff, k === 'protein' ? (left ? left + ' g protein to go.' : 'Protein target hit.') : (left ? Math.ceil(left / 250) + ' more glass' + (Math.ceil(left / 250) > 1 ? 'es' : '') + ' to go.' : 'Water target hit.'));
+      react(diff, k === 'protein' ? (left ? left + ' g protein to go.' : 'Protein target hit.') : (left ? Math.ceil(left / 250) + ' more glass' + (Math.ceil(left / 250) > 1 ? 'es' : '') + ' to go.' : 'Water target hit.'), 'health');
       if (hit) toast((k === 'protein' ? 'Protein' : 'Water') + ' target hit', 'pos');
     });
   }
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSheet(); walkerRing(false); } });
   // ---------- Danielle sticker: reactions + log sheet ----------
-  const SAY_GOOD = ['Nice. ', 'Yes. ', 'Proud of you. ', 'Keep going. ', 'Love that. '];
-  const SAY_BAD = ['Ouch. ', 'Hmm. ', 'We can fix this. ', 'Not ideal. '];
+  // Danielle's real words (verbatim, published after 11 Apr 2023). Sources:
+  // kt25 Korea Times 30 Apr 2025 birthday-letter post | cafe Koreaboo, handwritten cafe note (Apr 2024)
+  // kt24 Korea Times interview 23 Jul 2024 | grammy GRAMMY.com 26 Jul 2023 | dazed Dazed 24 Jul 2023
+  // soompi Soompi (Allure Korea) 22 May 2023 | spur SPUR Jul 2025 issue (fan translation) | ig Instagram 22 Jul 2026 (CBS NoCut News)
+  // live Instagram livestream 12 Jan 2026 (NST, Sports Kyunghyang)
+  const DQ = {
+    hello: ['Hi Bunnies! It’s Danielle~ Are you doing well?', 'Hi Bunnies! It’s me Danielle!'],
+    health: ['Always be healthy and eat well.', 'I hope your days—the days to come—are gentle, healthy, and filled with light.'],
+    move: ['When we dance on stage, it truly feels like we’re one.', 'Thanks to this bond, even intense practice sessions feel fun.', 'A song that would make everyone want to get up and dance at a party!', 'Our teamwork is the best!'],
+    good: ['Bunnies are my sunshine.', 'I love you more than words can say.', 'It was like a happy dream.', 'Our teamwork is the best!', 'Thank you, Bunnies.'],
+    grow: ['But now I feel like growth comes naturally when you enjoy the present as much as you can.', 'Until then, I will try my very best to continue growing and to treasure every moment of each day.', 'Time seems to be flying by lately, and I want to cherish every moment.', 'Each and every moment in front of me right now is precious.', 'I’m living diligently.'],
+    rough: ['Life can get blurry sometimes, but the light will always make its way back to where it’s meant to be. Until then, keep shining.', 'Bunnies, this is not the end. This is the beginning.', 'I believe that the future holds so many wonderful surprises for us that are simply waiting for the right moment to set flight.', 'I could feel your presence and every word became another reason to keep pushing forward.', 'Despite the tough moments, their love and energy have helped us grow and learn.'],
+    sleep: ['I had a dream where the members and I went on a trip together!', 'It was like a happy dream.'],
+    photo: ['I personally take a lot of photos because I like to really capture all those special moments, and we’ve gone through so many.'],
+    look: ['What I always try to do is show a new version of myself.', 'I don’t want to be boxed into one image.']
+  };
+  const dq = k => DQ[k][Math.floor(Math.random() * DQ[k].length)];
+  const sayMs = t => Math.min(12000, 4500 + t.length * 45);
   // ---------- meters ----------
   function meters(r) {
     r = r || compute();
@@ -718,10 +734,10 @@
     undoTimer = setTimeout(kill, 5000);
   }
 
-  function react(diff, zeroMsg) {
+  function react(diff, zeroMsg, cat) {
     const pick = a => a[Math.floor(Math.random() * a.length)];
     const tier = diff < 0 ? 'poor' : diff > 0 ? 'great' : null;
-    const say = diff > 0 ? pick(SAY_GOOD) + sign(diff) + ' XP' : diff < 0 ? pick(SAY_BAD) + sign(diff) + ' XP' : (zeroMsg || 'Logged.');
+    const say = diff > 0 ? dq(cat || 'good') : diff < 0 ? dq('rough') : (zeroMsg || 'Logged.');
     walkerReact(tier, Math.floor(Math.random() * 3), say, diff);
     if (diff > 0) spawnHearts(Math.min(7, 3 + Math.floor(diff / 15)));
   }
@@ -778,7 +794,7 @@
     WK.el.classList.remove('happy', 'sad'); void WK.el.offsetWidth; WK.el.classList.add('happy');
     setTimeout(() => WK.el.classList.remove('happy'), 1700);
     WK.mode = 'idle'; WK.until = performance.now() + 1800;
-    showSay('New look.', 3500); spawnHearts(3);
+    const nl = dq('look'); showSay(nl, sayMs(nl)); spawnHearts(3);
   }
   function walkerRing(open) {
     if (!WK.el) return;
@@ -810,19 +826,19 @@
   function idleLine() {
     const { tier, dr, net } = moodTier(), s = state.settings, ds = todayStr(), d = state.days[ds] || { events: [], steps: null, weight: null };
     const m = WK.m || meters(), h = new Date().getHours(), r = compute(), f = dayFlags(d, s);
-    if (!m.awake) return pick(['Kitchen’s closed. Zz', 'Zz… see you in the morning.', 'Sleepy. Log your sleep tomorrow.', 'Zz… dreaming about boxing.', 'Night. Good sleep counts for points.']);
+    if (!m.awake) return dq('sleep');
     if (Math.random() < 0.45) { const rl = reminderLine(); if (rl) return rl; }
     const L = [];
     // time of day
-    if (h < 11) L.push('Good morning.', 'New day, new points.', 'Breakfast idea: eggs and fruit.', 'Morning walk? Steps add up.');
-    else if (h < 14) L.push('Lunch time soon. Healthy one?', 'Halfway through the day. How are we doing?', 'Midday walk with me?');
-    else if (h < 18) L.push('Afternoon slump? Drink some water.', 'Snack check: something healthy.', 'Good time for a workout.');
-    else L.push('Evening. Let’s finish strong.', 'Dinner: something healthy?', 'Evening walk to close your steps?');
+    if (h < 11) L.push(dq('hello'), dq('grow'));
+    else if (h < 14) L.push(dq('health'), dq('grow'));
+    else if (h < 18) L.push(dq('move'), dq('health'));
+    else L.push(dq('grow'), dq('health'));
     // mood / score
-    if (!dr) L.push('Hi. Tap me to log your day.', 'Feed me?', 'Ready for boxing?', 'Nothing logged yet. Let’s start.');
-    else if (tier === 'great') L.push('Huge day. Keep it going.', 'You’re on fire today.', 'This is a great day.', 'Love this energy.');
-    else if (tier === 'okay') L.push(`${s.stickerGreat - net} more points for a huge day.`, 'Solid so far. Workout?', 'Nearly a huge day.');
-    else L.push('Rough one. Feed me something healthy?', 'Let’s turn it around.', 'One good meal changes the day.');
+    if (!dr) L.push(dq('hello'), dq('hello'));
+    else if (tier === 'great') L.push(dq('good'), dq('good'), dq('move'));
+    else if (tier === 'okay') L.push(`${s.stickerGreat - net} more points for a huge day.`, dq('grow'));
+    else L.push(dq('rough'), dq('rough'));
     // quests
     if (ds >= BONUS_FROM) {
       const todo = questsFor(ds).filter(q => !q.done(d, f)), sq = stepQuest(ds), sleft = sq.target - (d.steps || 0);
@@ -836,10 +852,8 @@
     }
     // steps / food / fuel
     if (d.steps == null || d.steps < s.stepTarget) L.push(d.steps == null ? 'Steps check?' : (s.stepTarget - d.steps).toLocaleString() + ' steps to go.');
-    if (f.exercise === 0 && h >= 12) L.push('No workout yet. Boxing?', '30 minutes of anything counts.');
-    if (!waterOK(d)) L.push('Water helps. Tap me to add a glass.');
-    else L.push('Water target hit. Nice.');
-    if (!waterOK(state.days[ds])) L.push('Water break?', 'Sip some water with me.');
+    if (f.exercise === 0 && h >= 12) L.push(dq('move'));
+    if (!waterOK(d)) L.push(dq('health'));
     // streaks / freezes / stars / level
     const best = Math.max(r.streaks.steps, r.streaks.window, r.streaks.healthy);
     if (best >= 2) L.push(best + '-day streak. Don’t break it.');
@@ -853,22 +867,22 @@
     const nxt = DANIELLE.concat(DANI_GIFS).filter(i => i.lv > peakL).reduce((mm, i) => Math.min(mm, i.lv), Infinity);
     if (isFinite(nxt)) L.push('New photos unlock at level ' + nxt + '.');
     // meters
-    if (m.full < 25) L.push('I’m hungry. Feed me?', 'Snack time? Something healthy.');
-    if (m.energy < 30 && h >= 15) L.push('Low energy. Walk with me?', 'Boxing later?');
-    if (m.happy < 35) L.push('Can we have a better day?', 'I’m a bit sad. Log something good?');
-    if (m.happy >= 80) L.push('So happy right now.', 'Best day ever?');
+    if (m.full < 25) L.push(dq('health'));
+    if (m.energy < 30 && h >= 15) L.push(dq('move'));
+    if (m.happy < 35) L.push(dq('rough'));
+    if (m.happy >= 80) L.push(dq('good'));
     // forecast
     const k = forecast();
     if (k != null && k < -0.005 && s.goalWeight) L.push('Trend is going down. ' + r1(-k * 7) + ' kg a week.');
     // general encouragement
-    L.push('Proud of you.', 'Small steps, every day.', 'You’ve got this.', 'Consistency wins.', 'Fighting.');
+    L.push(dq('grow'), dq('grow'), dq('good'));
     return pick(L);
   }
   const TAB_LINES = {
-    today: () => pick(['Back to today.', 'What are we logging?', 'Let’s check the quests.']),
-    progress: () => { const k = forecast(); return k != null && k < -0.005 ? 'Look at that trend.' : pick(['Progress check.', 'Every kg counts.', 'Add a progress photo?']); },
-    history: () => pick(['Look how far you’ve come.', 'Check the collection.', 'Remember the huge days?']),
-    settings: () => { const b = starBal(); return b ? b.toLocaleString() + ' Stars to spend.' : pick(['Shop opens with Stars.', 'Set your targets here.']); }
+    today: () => dq('hello'),
+    progress: () => dq('grow'),
+    history: () => pick([dq('good'), 'Time seems to be flying by lately, and I want to cherish every moment.']),
+    settings: () => { const b = starBal(); return b ? b.toLocaleString() + ' Stars to spend.' : dq('grow'); }
   };
   function showSay(text, ms) {
     const b = WK.el.querySelector('#wk-say');
@@ -898,7 +912,7 @@
     f.className = 'float'; f.textContent = '';
     if (diff) { void f.offsetWidth; f.textContent = sign(diff); f.className = 'float go ' + cls(diff); }
     WK.mode = 'idle'; WK.until = performance.now() + 2600;
-    walkerUpdate(); showSay(say, 5000);
+    walkerUpdate(); showSay(say, sayMs(say));
     setTimeout(() => { WK.el.classList.remove('happy', 'sad'); walkerUpdate(); }, 2650);
   }
   function walkerTick(t) {
@@ -936,7 +950,7 @@
       say.style.left = Math.round(Math.max(8, Math.min(ar.width - sw - 8, cx - sw / 2))) + 'px';
       if (t > WK.sayUntil) hideSay();
     } else if (!WK.ring && t > WK.nextSay && !document.getElementById('sheet')) {
-      if (t > WK.quietUntil) { showSay(idleLine(), 6500); WK.nextSay = t + 9000 + Math.random() * 4000; }
+      if (t > WK.quietUntil) { { const il = idleLine(); showSay(il, sayMs(il)); WK.nextSay = t + Math.max(9000, sayMs(il) + 3000) + Math.random() * 4000; } }
     }
     if (WK.rx && t > WK.rxUntil) { WK.rx = null; walkerUpdate(); }
     if (t > WK.nextM) { WK.nextM = t + 60000; walkerUpdate(); }
@@ -1004,10 +1018,10 @@
     el.querySelector('#sh-x').onclick = closeSheet;
     const ft = el.querySelector('#foodtime');
     if (ft) { const upd = () => { el.querySelector('#winnote').textContent = inWindow(ft.value || nowTime(), s) ? 'Inside your eating window.' : 'Outside your eating window.'; el.querySelector('#winnote').className = 'hint ' + (inWindow(ft.value || nowTime(), s) ? '' : 'bad'); }; ft.oninput = upd; upd(); }
-    const doLog = (fn, label, zeroMsg) => {
+    const doLog = (fn, label, zeroMsg, cat) => {
       const snap = JSON.stringify(state.days[ds] || null), sw = state.settings.startWeight;
       const diff = commit(fn, true);
-      react(diff, zeroMsg);
+      react(diff, zeroMsg, cat);
       showUndo(label, diff, () => {
         const d2 = commit(() => { if (snap === 'null') delete state.days[ds]; else state.days[ds] = JSON.parse(snap); state.settings.startWeight = sw; }, true, true);
         walkerReact(null, 0, 'Undone.' + (d2 ? ' ' + sign(d2) + ' XP' : ''), d2);
@@ -1018,7 +1032,7 @@
       closeSheet();
       if (a.once && count(t)) { doLog(() => { const dd = day(ds); dd.events = dd.events.filter(e => e.type !== t); }, 'Removed ' + a.label, 'Undone.'); return; }
       const time = a.group === 'food' ? ((ft && ft.value) || nowTime()) : (isToday ? nowTime() : '12:00');
-      doLog(() => day(ds).events.push({ id: uid(), type: t, time }), a.label, a.group === 'food' && t === 'healthy' ? 'Logged. Healthy meal cap reached for today.' : 'Logged.');
+      doLog(() => day(ds).events.push({ id: uid(), type: t, time }), a.label, a.group === 'food' && t === 'healthy' ? 'Logged. Healthy meal cap reached for today.' : 'Logged.', a.group === 'food' ? 'health' : a.group === 'ex' ? 'move' : 'good');
     });
     el.querySelectorAll('[data-wcv]').forEach(b => b.onclick = () => {
       const c = wcFor(ds), cur = (state.days[ds] && state.days[ds].wc) || 0, v = +b.dataset.wcv;
@@ -1033,7 +1047,7 @@
           else if (nv < c.target && auto >= 0) dd.events.splice(auto, 1);
         }
       }, true);
-      react(diff, hit ? (c.k === 'run' ? 'Run done. Cardio logged too.' : 'Challenge done.') : nv < c.target ? wcFmt(c, c.target - nv) + ' ' + c.unit + ' to go.' : 'Extra credit.');
+      react(diff, hit ? (c.k === 'run' ? 'Run done. Cardio logged too.' : 'Challenge done.') : nv < c.target ? wcFmt(c, c.target - nv) + ' ' + c.unit + ' to go.' : 'Extra credit.', 'move');
       if (hit) toast('Challenge done ' + sign(c.pts), 'pos');
       openSheet('wc');
     });
@@ -1043,7 +1057,7 @@
       const hit = cur < s.waterTarget && cur + v >= s.waterTarget;
       const diff = commit(() => { day(ds).water = cur + v; }, true);
       const left = Math.max(0, s.waterTarget - cur - v);
-      react(diff, left ? Math.ceil(left / 250) + ' more glass' + (Math.ceil(left / 250) > 1 ? 'es' : '') + ' to go.' : 'Water target hit.');
+      react(diff, left ? Math.ceil(left / 250) + ' more glass' + (Math.ceil(left / 250) > 1 ? 'es' : '') + ' to go.' : 'Water target hit.', 'health');
       if (hit) toast('Water target hit', 'pos');
       openSheet('daily');
     });
@@ -1055,8 +1069,8 @@
     if (sv) {
       sv.onclick = () => {
         const v = num.value.trim(); closeSheet();
-        if (kind === 'daily') doLog(() => { const dd = day(ds); dd.sleep = v === '' ? null : Math.max(0, Math.min(16, r1(+v))); delete dd.sleepSrc; }, v === '' ? 'Sleep cleared' : 'Slept ' + r1(+v) + ' h', 'Sleep saved.');
-        else if (kind === 'steps') doLog(() => { const dd = day(ds); dd.steps = v === '' ? null : Math.max(0, Math.round(+v)); delete dd.stepsSrc; }, v === '' ? 'Steps cleared' : (+v).toLocaleString() + ' steps', 'Steps saved.');
+        if (kind === 'daily') doLog(() => { const dd = day(ds); dd.sleep = v === '' ? null : Math.max(0, Math.min(16, r1(+v))); delete dd.sleepSrc; }, v === '' ? 'Sleep cleared' : 'Slept ' + r1(+v) + ' h', 'Sleep saved.', 'health');
+        else if (kind === 'steps') doLog(() => { const dd = day(ds); dd.steps = v === '' ? null : Math.max(0, Math.round(+v)); delete dd.stepsSrc; }, v === '' ? 'Steps cleared' : (+v).toLocaleString() + ' steps', 'Steps saved.', 'move');
         else doLog(() => { const w = v === '' ? null : r1(+v); day(ds).weight = w; if (w && !state.settings.startWeight) state.settings.startWeight = w; }, v === '' ? 'Weigh-in cleared' : 'Weigh-in ' + r1(+v) + ' kg', 'Weigh-in saved.');
       };
       num.addEventListener('keydown', e => { if (e.key === 'Enter') sv.click(); });
@@ -1270,7 +1284,7 @@
         const r = await fetch(API + '/api/photos', { method: 'POST', headers: { 'Content-Type': 'application/json', ...AH }, body: JSON.stringify({ date, pose: PP.pose, data }) });
         if (!r.ok) throw new Error(r.status);
         const j = await r.json(); PP.list.push({ id: j.id, date, pose: PP.pose }); PP.b = j.id;
-        toast('Photo saved', 'pos'); walkerReact('great', 1, 'Looking strong.', 0); render();
+        toast('Photo saved', 'pos'); walkerReact('great', 1, dq('photo'), 0); render();
       } catch (e) { msg.textContent = 'Upload failed. Try again.'; }
     };
     const a = document.getElementById('pp-a'), b = document.getElementById('pp-b');
@@ -1559,7 +1573,7 @@
       if (!(await confirmBox(`Spend ${it.cost.toLocaleString()} Stars on “${it.name}”? Your XP and level stay the same.`))) return;
       const rec = { id: uid(), itemId: it.id, name: it.name, cost: it.cost, date: todayStr() };
       sh.bought.push(rec); save(); render();
-      walkerReact('great', 2, 'Enjoy it. You earned it.', 0); spawnHearts(5);
+      walkerReact('great', 2, 'Thank you, Bunnies.', 0); spawnHearts(5);
       showUndo('Bought ' + it.name, 0, () => { sh.bought = sh.bought.filter(x => x.id !== rec.id); save(); render(); walkerReact(null, 0, 'Refunded.', 0); });
     });
     view().querySelectorAll('[data-sedit]').forEach(b => b.onclick = () => {
@@ -1634,7 +1648,7 @@
     document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === ui.tab));
     walkerUpdate();
   }
-  function setTab(t) { const ch = ui.tab !== t; ui.tab = t; walkerRing(false); closeSheet(); render(); window.scrollTo(0, 0); if (ch && WK.el && !WK.sleep) { setTimeout(() => { showSay(TAB_LINES[t](), 5500); WK.nextSay = performance.now() + 9500; }, 1000); } }
+  function setTab(t) { const ch = ui.tab !== t; ui.tab = t; walkerRing(false); closeSheet(); render(); window.scrollTo(0, 0); if (ch && WK.el && !WK.sleep) { setTimeout(() => { { const tl = TAB_LINES[t](); showSay(tl, sayMs(tl)); }; WK.nextSay = performance.now() + 9500; }, 1000); } }
   document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { if (b.dataset.tab === 'today' && ui.tab === 'today') ui.date = todayStr(); setTab(b.dataset.tab); });
 
   // keep "today" current if the app stays open past midnight
